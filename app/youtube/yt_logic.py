@@ -1,6 +1,8 @@
 from pytubefix import YouTube
-from app.youtube.utils import *
-from app.schemas import *
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
+from app.utils import *
+from app.database.models import Video, Format
 from app.config import RESOLUTIONS, VIDEO_STORAGE
 import os
 import subprocess
@@ -13,62 +15,62 @@ def fetch_video_info(video_url: str) -> Video:
     return Video(
         title=video.title,
         duration=readable_duration(video.length),
+        url=video_url,
         formats=[
-            Format(
-                resolution=res,
-                file_size=size
-            ) for res, size in resolutions.items()
-        ],
-        video_url=video_url,
-        file_path=None,
-        download_status=False
+            Format(resolution=res, size=size) for res, size in resolutions.items()
+        ]
     )
 
-def download_video(url, resolution):
+def download_video_logic(url: str, resolution: str) -> str:
     try:
         print("Connecting to YouTube...")
         video = YouTube(url)
-        
-        # Get the video stream
-        video_stream = video.streams.filter(res=resolution, only_video=True).first()
-        # Get the audio stream
-        audio_stream = video.streams.filter(only_audio=True).first()
-        
-        if not video_stream:
-            print(f"{resolution} stream not available for this video.")
-            return
-            
-        if not audio_stream:
-            print("Audio stream not available for this video.")
-            return
-            
-        print(f"Downloading: {video.title}")
-        
+
         # Sanitize the video title for use as a filename
         sanitized_title = sanitize_filename(video.title)
-        
-        # Download video and audio separately
+        output_file = os.path.join(VIDEO_STORAGE, f"{sanitized_title}_{resolution}.mp4")
+
+        # Check if the video is already downloaded
+        if os.path.exists(output_file):
+            print(f"Video already downloaded: {output_file}")
+            return output_file
+
+        # Get the video stream
+        video_stream = video.streams.filter(res=resolution, only_video=True).first()
+        if not video_stream:
+            raise HTTPException(status_code=404, detail="Requested video resolution not available.")
+
+        # Get the audio stream
+        audio_stream = video.streams.filter(only_audio=True).first()
+        if not audio_stream:
+            raise HTTPException(status_code=404, detail="Requested video has no audio available.")
+
+        print(f"Downloading video: {video.title}")
         video_file = video_stream.download(output_path=VIDEO_STORAGE, filename_prefix="video_")
         audio_file = audio_stream.download(output_path=VIDEO_STORAGE, filename_prefix="audio_")
-        
-        # Output filename
-        output_file = os.path.join(VIDEO_STORAGE, f"{sanitized_title}_{resolution}.mp4")
-        
-        # Merge video and audio using ffmpeg
+
         print("Merging video and audio...")
         subprocess.run([
-            'ffmpeg', '-i', video_file, 
-            '-i', audio_file, 
+            'ffmpeg', '-i', video_file,
+            '-i', audio_file,
             '-c:v', 'copy',
             '-c:a', 'aac',
             output_file,
         ], check=True)
-        
+
         # Clean up temporary files
         os.remove(video_file)
         os.remove(audio_file)
-        
-        print(f"Download and merge complete! File saved at: {output_file}")
-        
+
+        print(f"Download complete: {output_file}")
+        return output_file
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        print(f"Error during download: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected Error: {str(e)}")
+
+def upload_video_logic(video_title: str, video_res: str):
+    try:
+        file_path = os.path.join(VIDEO_STORAGE, f"{video_title}_{video_res}.mp4")
+        return FileResponse(path=file_path, filename=f"{video_title}_{video_res}.mp4")
+    except FileNotFoundError:
+        raise FileNotFoundError(f"{video_title} at {video_res} doesn't exist")
