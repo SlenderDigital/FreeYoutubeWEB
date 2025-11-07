@@ -1,4 +1,4 @@
-# Free YouTube Backend
+# Free YouTube WEB
 
 A comprehensive **backend** for the Free YouTube project, featuring a REST API and database integration. This application allows users to fetch YouTube video information, download videos in various resolutions, and manage a local video library.
 
