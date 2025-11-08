@@ -49,7 +49,7 @@ A comprehensive **backend** for the Free YouTube project, featuring a REST API a
 
 4. **Run the application**
    ```bash
-   uvicorn app.main:app --reload
+   uvicorn backend.main:backend --reload
    ```
 
 The API will be available at `http://localhost:8000` with automatic documentation at `http://localhost:8000/docs`.
@@ -138,13 +138,13 @@ curl "http://localhost:8000/history/videos"
 To execute any Python file within the project, use the following command from the project root:
 
 ```bash
-python -m app.PACKAGE.FILE
+python -m backend.PACKAGE.FILE
 ```
 
 For example:
 ```bash
-python -m app.youtube.yt_logic
-python -m app.database.models
+python -m backend.youtube.yt_logic
+python -m backend.database.models
 ```
 
 

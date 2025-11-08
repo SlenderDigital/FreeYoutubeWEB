@@ -1,17 +1,17 @@
 from pytubefix import YouTube
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
-from app.utils import *
-from app.database.models import Video, Format
-from app.config import RESOLUTIONS, VIDEO_STORAGE
+from backend.utils import *
+from backend.database.models import Video, Format
+from backend.config import RESOLUTIONS, VIDEO_STORAGE
 import os
 import subprocess
 
-def fetch_video_info(video_url: str) -> Video:
 
+def fetch_video_info(video_url: str) -> Video:
     video = YouTube(video_url)
     resolutions = available_resolution(video, RESOLUTIONS)
-    
+
     return Video(
         title=video.title,
         duration=readable_duration(video.length),
@@ -20,6 +20,7 @@ def fetch_video_info(video_url: str) -> Video:
             Format(resolution=res, size=size) for res, size in resolutions.items()
         ]
     )
+
 
 def download_video_logic(url: str, resolution: str) -> str:
     try:
@@ -67,6 +68,7 @@ def download_video_logic(url: str, resolution: str) -> str:
     except Exception as e:
         print(f"Error during download: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Unexpected Error: {str(e)}")
+
 
 def upload_video_logic(video_title: str, video_res: str):
     try:
