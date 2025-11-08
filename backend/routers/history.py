@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlmodel import Session, select
-from app.database.database import get_session 
-from app.database.models import *
-from app.utils import all_videos, update_object_property, find_video
+from backend.database.database import get_session
+from backend.database.models import *
+from backend.utils import all_videos, update_object_property, find_video
 
 router = APIRouter(prefix="/history", tags=["history"])
 
@@ -12,13 +12,13 @@ def get_videos_history(*, session: Session = Depends(get_session)) -> List[dict]
     videos = session.exec(select(Video)).all()
     if not videos:
         raise HTTPException(status_code=404, detail="No videos")
-    
+
     # Include resolutions (formats) for each video
     return all_videos(videos)
 
 
 @router.get("/video/")
-def get_video(*, 
+def get_video(*,
     title: str = Query(..., description="title of the video"),
     session: Session = Depends(get_session)
 ) -> dict:
@@ -34,7 +34,7 @@ def get_video(*,
 def edit_title(*,
     title: str = Query(..., description="Title"),
     new_title: str = Query(..., description="New title"),
-    session: Session = Depends(get_session)             
+    session: Session = Depends(get_session)
 ) -> dict:
     videos = session.exec(select(Video)).all()
     for video in videos:

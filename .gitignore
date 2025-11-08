@@ -1,4 +1,2 @@
-.venv
-.vscode
 storage/*
-app/database/sqlite/*
+backend/database/sqlite/*
