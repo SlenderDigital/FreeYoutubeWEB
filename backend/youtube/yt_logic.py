@@ -6,7 +6,10 @@ from backend.database.models import Video, Format
 from backend.config import RESOLUTIONS, VIDEO_STORAGE
 import os
 import subprocess
+import imageio_ffmpeg
 
+# Get FFmpeg executable path from imageio-ffmpeg
+FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
 
 def fetch_video_info(video_url: str) -> Video:
     video = YouTube(video_url)
@@ -51,8 +54,9 @@ def download_video_logic(url: str, resolution: str) -> str:
         audio_file = audio_stream.download(output_path=VIDEO_STORAGE, filename_prefix="audio_")
 
         print("Merging video and audio...")
+        # Use the FFmpeg path from imageio-ffmpeg
         subprocess.run([
-            'ffmpeg', '-i', video_file,
+            FFMPEG_PATH, '-i', video_file,
             '-i', audio_file,
             '-c:v', 'copy',
             '-c:a', 'aac',
