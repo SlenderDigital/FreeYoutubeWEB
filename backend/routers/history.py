@@ -59,3 +59,20 @@ def update_resolution(*,
                     session.commit()
                     return {"message": f"Resolution {resolution} deleted successfully"}
     raise HTTPException(status_code=404, detail="not video with that resolution and title")
+
+
+@router.delete("/video/history")
+def delete_history(*, session: Session = Depends(get_session)) -> dict:
+    # Get all videos
+    videos = session.exec(select(Video)).all()
+
+    if not videos:
+        raise HTTPException(status_code=404, detail="No videos to delete")
+
+    # Delete all videos (this will cascade delete formats if configured)
+    for video in videos:
+        session.delete(video)
+
+    session.commit()
+
+    return {"message": f"Successfully deleted {len(videos)} videos from history"}
