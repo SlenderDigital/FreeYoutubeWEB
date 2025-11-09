@@ -14,7 +14,6 @@ import os.path
 @asynccontextmanager
 async def lifespan(app: FastAPI):  ## 'app' needed even if not used
     create_db_and_tables()
-    print(app.state)
     yield
 
 
