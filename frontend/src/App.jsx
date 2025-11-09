@@ -5,7 +5,11 @@ import SearchBar from './components/SearchBar';
 import VideoCard from './components/VideoCard';
 import History from './components/History';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+
+const sanitizeFilename = (filename) => {
+  return filename.replace(/[\\/*?:"<>|]/g, '_');
+};
 
 function App() {
   const [videoInfo, setVideoInfo] = useState(null);
@@ -13,20 +17,21 @@ function App() {
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // Función para sanitizar el nombre del archivo
-  const sanitizeFilename = (filename) => {
-    return filename.replace(/[\\/*?:"<>|]/g, '_');
-  };
-
-  // Cargar historial desde la base de datos
+  // Cargar historial de la base de datos
   const loadHistory = async () => {
+    setLoadingHistory(true);
     try {
       const response = await axios.get(`${API_URL}/history/videos`);
-      setHistory(response.data || []);
+      setHistory(response.data);
     } catch (err) {
-      console.error('Error loading history:', err);
-      setHistory([]);
+      // Si no hay videos, simplemente dejar el array vacío
+      if (err.response?.status === 404) {
+        setHistory([]);
+      }
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -47,7 +52,7 @@ function App() {
 
       setVideoInfo(response.data);
 
-      // Recargar el historial después de agregar el video
+      // Recargar historial después de buscar un video
       await loadHistory();
     } catch (err) {
       setError(err.response?.data?.detail || 'Error al buscar el video. Verifica la URL.');
@@ -94,61 +99,23 @@ function App() {
   };
 
   const clearHistory = async () => {
-    const confirmed = window.confirm(
-      '⚠️ ADVERTENCIA: Esto eliminará TODOS los videos de la base de datos y TODOS los archivos descargados. ¿Estás seguro?'
-    );
-
-    if (!confirmed) return;
+    if (!confirm('¿Estás seguro de que quieres eliminar todo el historial y los videos descargados?')) {
+      return;
+    }
 
     try {
-      const response = await axios.delete(`${API_URL}/history/clear-all`);
-
-      // Limpiar estado local
+      await axios.delete(`${API_URL}/history/clear`);
       setHistory([]);
       setVideoInfo(null);
-
-      // Mostrar mensaje de éxito
-      alert(
-        `✅ Historial limpiado exitosamente:\n` +
-        `- ${response.data.videos_deleted} videos eliminados de la base de datos\n` +
-        `- ${response.data.files_deleted} archivos eliminados del almacenamiento`
-      );
-
-      // Recargar historial (debería estar vacío)
-      await loadHistory();
+      alert('Historial limpiado exitosamente');
     } catch (err) {
       alert('Error al limpiar el historial: ' + (err.response?.data?.detail || err.message));
     }
   };
 
-  const deleteVideo = async (videoId) => {
-    const confirmed = window.confirm('¿Estás seguro de que quieres eliminar este video y sus archivos?');
-
-    if (!confirmed) return;
-
-    try {
-      await axios.delete(`${API_URL}/history/video/${videoId}`);
-
-      // Recargar historial
-      await loadHistory();
-
-      // Si el video eliminado es el que se está mostrando, limpiarlo
-      if (videoInfo?.id === videoId) {
-        setVideoInfo(null);
-      }
-
-      alert('Video y archivos eliminados exitosamente');
-    } catch (err) {
-      alert('Error al eliminar el video: ' + (err.response?.data?.detail || err.message));
-    }
-  };
-
   return (
     <div className="min-h-screen bg-yt-black">
-      <Header
-        onToggleHistory={() => setShowHistory(!showHistory)}
-        historyCount={history.length}
-      />
+      <Header onToggleHistory={() => setShowHistory(!showHistory)} historyCount={history.length} />
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-12">
@@ -166,7 +133,7 @@ function App() {
             history={history}
             onSelect={handleSelectFromHistory}
             onClear={clearHistory}
-            onDelete={deleteVideo}
+            loading={loadingHistory}
           />
         )}
 

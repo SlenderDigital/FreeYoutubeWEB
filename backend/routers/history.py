@@ -1,11 +1,12 @@
+import glob
+
 from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlmodel import Session, select
 from backend.database.database import get_session
 from backend.database.models import *
-from backend.utils import all_videos, update_object_property, find_video, sanitize_filename
+from backend.utils import all_videos, update_object_property, find_video
 from backend.config import VIDEO_STORAGE
 import os
-import shutil
 
 router = APIRouter(prefix="/history", tags=["history"])
 
@@ -110,79 +111,37 @@ def delete_resolution(*,
     raise HTTPException(status_code=404, detail="not video with that resolution and title")
 
 
-@router.delete("/clear-all")
+@router.delete("/clear")
 def clear_all_history(*, session: Session = Depends(get_session)) -> dict:
-    """
-    Clear ALL history: Delete all videos from database AND delete all downloaded files
-    """
-    try:
-        # Get all videos from database
-        videos = session.exec(select(Video)).all()
-        video_count = len(videos)
 
-        # Delete all videos from database (formats will cascade delete)
+    try:
+        videos = session.exec(select(Video)).all()
+
+        deleted_count = len(videos)
+
+        for video in videos:
+            for fmt in video.formats:
+                session.delete(fmt)
+
         for video in videos:
             session.delete(video)
 
         session.commit()
 
-        # Delete all files in storage directory
+        video_files = glob.glob(os.path.join(VIDEO_STORAGE, "*.mp4"))
         files_deleted = 0
-        if VIDEO_STORAGE.exists() and VIDEO_STORAGE.is_dir():
-            for file in VIDEO_STORAGE.iterdir():
-                if file.is_file():
-                    try:
-                        file.unlink()
-                        files_deleted += 1
-                    except Exception as e:
-                        print(f"Error deleting file {file}: {e}")
+        for file_path in video_files:
+            try:
+                os.remove(file_path)
+                files_deleted += 1
+            except Exception as e:
+                print(f"Error deleting file {file_path}: {e}")
 
         return {
-            "message": "History and files cleared successfully",
-            "videos_deleted": video_count,
+            "message": "Historial limpiado exitosamente",
+            "videos_deleted": deleted_count,
             "files_deleted": files_deleted
         }
-
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error clearing history: {str(e)}"
-        )
-
-
-@router.delete("/video/{video_id}")
-def delete_video(*,
-                 video_id: int,
-                 session: Session = Depends(get_session)
-                 ) -> dict:
-    """Delete a specific video from database and its downloaded files"""
-    video = session.get(Video, video_id)
-
-    if not video:
-        raise HTTPException(status_code=404, detail=f"Video with ID {video_id} not found")
-
-    # Delete associated files
-    files_deleted = []
-    if video.file_path:
-        # The file_path might be the base path, we need to check for all resolutions
-        for fmt in video.formats:
-            # Reconstruct the filename based on title and resolution
-            from backend.utils import sanitize_filename
-            sanitized_title = sanitize_filename(video.title)
-            file_path = VIDEO_STORAGE / f"{sanitized_title}_{fmt.resolution}.mp4"
-
-            if file_path.exists():
-                try:
-                    file_path.unlink()
-                    files_deleted.append(str(file_path))
-                except Exception as e:
-                    print(f"Error deleting file {file_path}: {e}")
-
-    # Delete video from database (formats will cascade delete)
-    session.delete(video)
-    session.commit()
-
-    return {
-        "message": f"Video '{video.title}' deleted successfully",
-        "files_deleted": files_deleted
-    }
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al limpiar historial: {str(e)}")
