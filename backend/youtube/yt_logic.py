@@ -1,4 +1,3 @@
-from pytubefix import YouTube
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from backend.utils import *
@@ -15,10 +14,14 @@ def fetch_video_info(video_url: str) -> Video:
     video = YouTube(video_url)
     resolutions = available_resolution(video, RESOLUTIONS)
 
+    # Obtiene thumbnail URL (la mejor calidad disponible)
+    thumbnail_url = video.thumbnail_url
+
     return Video(
         title=video.title,
         duration=readable_duration(video.length),
         url=video_url,
+        thumbnail_url=thumbnail_url,
         formats=[
             Format(resolution=res, size=size) for res, size in resolutions.items()
         ]

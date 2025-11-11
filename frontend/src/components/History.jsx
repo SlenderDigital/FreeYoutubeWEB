@@ -46,33 +46,48 @@ const History = ({ history, onSelect, onClear, onDelete, loading }) => {
             <div
               key={item.id || index}
               onClick={() => onSelect(item)}
-              className="bg-yt-dark hover:bg-yt-darker rounded-xl p-4 border border-yt-darker hover:border-yt-red transition-all duration-200 cursor-pointer group relative"
+              className="bg-yt-dark hover:bg-yt-darker rounded-xl overflow-hidden border border-yt-darker hover:border-yt-red transition-all duration-200 cursor-pointer group relative"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0 pr-4">
-                  <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2 group-hover:text-yt-red transition-colors">
-                    {item.title}
-                  </h3>
-                  <div className="flex items-center space-x-4 text-yt-gray text-sm">
-                    <span className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{item.duration}</span>
-                    </span>
-                    <span className="flex items-center space-x-1">
-                      <Download className="w-4 h-4" />
-                      <span>{item.resolutions?.length || 0} resoluciones</span>
-                    </span>
+              <div className="flex items-start">
+                {/* Thumbnail */}
+                {item.thumbnail_url && (
+                  <div className="flex-shrink-0 w-40 h-24 bg-yt-darker overflow-hidden">
+                    <img
+                      src={item.thumbnail_url}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      loading="lazy"
+                    />
                   </div>
-                </div>
+                )}
 
-                {/* Botón de eliminar */}
-                <button
-                  onClick={(e) => handleDelete(e, item.id, item.title)}
-                  className="flex-shrink-0 p-2 rounded-lg bg-yt-darker hover:bg-yt-red/20 border border-yt-darker hover:border-yt-red transition-all duration-200 group/delete"
-                  title="Eliminar video"
-                >
-                  <X className="w-5 h-5 text-yt-gray group-hover/delete:text-yt-red transition-colors" />
-                </button>
+                {/* Información del video */}
+                <div className="flex-1 min-w-0 p-4 flex items-start justify-between">
+                  <div className="flex-1 min-w-0 pr-4">
+                    <h3 className="text-white font-semibold text-lg mb-2 line-clamp-2 group-hover:text-yt-red transition-colors">
+                      {item.title}
+                    </h3>
+                    <div className="flex items-center space-x-4 text-yt-gray text-sm">
+                      <span className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{item.duration}</span>
+                      </span>
+                      <span className="flex items-center space-x-1">
+                        <Download className="w-4 h-4" />
+                        <span>{item.resolutions?.length || 0} resoluciones</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Botón de eliminar */}
+                  <button
+                    onClick={(e) => handleDelete(e, item.id, item.title)}
+                    className="flex-shrink-0 p-2 rounded-lg bg-yt-darker hover:bg-yt-red/20 border border-yt-darker hover:border-yt-red transition-all duration-200 group/delete"
+                    title="Eliminar video"
+                  >
+                    <X className="w-5 h-5 text-yt-gray group-hover/delete:text-yt-red transition-colors" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}

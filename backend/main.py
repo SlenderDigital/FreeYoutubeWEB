@@ -3,10 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from sqlmodel import Session
-from backend.database.models import Video
 from backend.utils import video_exist, update_object_property, find_video
 from backend.youtube.yt_logic import fetch_video_info, download_video_logic, upload_video_logic
-from backend.database.database import create_db_and_tables, engine, get_session
+from backend.database.database import create_db_and_tables, get_session
 from backend.routers import history
 import os.path
 
@@ -34,9 +33,9 @@ app.include_router(history.router, prefix="/api")
 
 @app.get("/api/yt/video-info")
 def get_video_info(
-        *,
-        video_url: str = Query(..., description="YouTube video URL"),
-        session: Session = Depends(get_session)
+    *,
+    video_url: str = Query(..., description="YouTube video URL"),
+    session: Session = Depends(get_session)
 ) -> dict:
     try:
         # Check if the video exists in the database
