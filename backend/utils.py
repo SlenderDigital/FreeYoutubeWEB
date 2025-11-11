@@ -68,6 +68,7 @@ def find_video(video: Video) -> dict | None:
         "title": video.title,
         "duration": video.duration,
         "url": video.url,
+        "thumbnail_url": video.thumbnail_url,
         "resolutions": resolutions,
     }
 
@@ -85,6 +86,7 @@ def all_videos(videos: Sequence[Video]):
             "title": video.title,
             "duration": video.duration,
             "url": video.url,
+            "thumbnail_url": video.thumbnail_url,
             "resolutions": resolutions
         })
 

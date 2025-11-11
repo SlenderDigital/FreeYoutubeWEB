@@ -6,6 +6,7 @@ class Video(SQLModel, table=True):
     title: str = Field(max_length=100)
     duration: str = Field(max_length=8)
     url: str
+    thumbnail_url: Optional[str] = None
     file_path: Optional[str] = None
 
     # One-to-Many relationship with Format
@@ -19,4 +20,3 @@ class Format(SQLModel, table=True):
     # Foreign key to Video
     video_id: int = Field(foreign_key="video.id")
     video: Video = Relationship(back_populates="formats")
-
