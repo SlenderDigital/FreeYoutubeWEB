@@ -1,19 +1,21 @@
 from pytubefix import YouTube
-from fastapi import Depends
 from sqlmodel import Session, Sequence, select
 from backend.database.models import Video
-from backend.database.database import get_session
 import re
 
 """YouTube Logic"""
 
 
 def readable_size(size_in_bytes: int) -> str:
-    """Convert bytes to human readable string."""
+    """
+       Convert bytes to human readable string.
+       Uses decimal units (1 KB = 1000 bytes) to match what users see in their file explorer.
+       Just change it to 1024 if you want binary units.
+    """
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if size_in_bytes < 1024:
+        if size_in_bytes < 1000.0:
             return f"{size_in_bytes:.2f} {unit}"
-        size_in_bytes /= 1024
+        size_in_bytes /= 1000.0
     return f"{size_in_bytes:.2f} PB"
 
 
@@ -24,17 +26,17 @@ def readable_duration(seconds: int) -> str:
     return f"{hours:02}:{minutes:02}:{secs:02}"
 
 
-def available_resolution(video: YouTube, RESOLUTIONS: list) -> dict:
-    available_resolution = {}
+def available_resolution(video: YouTube, resolutions: list) -> dict:
+    resolutions_ready = {}
     try:  # Create a YouTube object
-        for res in RESOLUTIONS:
+        for res in resolutions:
             stream = video.streams.filter(res=res).first()
             if stream:
                 size = readable_size(stream.filesize) if stream.filesize else "Unknown"
-                available_resolution[res] = size
+                resolutions_ready[res] = size
     except Exception as e:
         print(f"Error processing video URL: {e}")
-    return available_resolution
+    return resolutions_ready
 
 
 def sanitize_filename(filename: str) -> str:
