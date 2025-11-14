@@ -1,0 +1,196 @@
+### ===================================
+### YouTube Downloader API - REST Client
+### ===================================
+
+### Variables
+@baseUrl = http://localhost:8001/api
+@videoUrl = https://www.youtube.com/watch?v=dQw4w9WgXcQ
+@videoUrl2 = https://www.youtube.com/watch?v=jNQXAC9IVRw
+@resolution = 720p
+@videoTitle = Never Gonna Give You Up
+@newVideoTitle = Rick Astley - Never Gonna Give You Up
+
+
+### ===================================
+### 1. VIDEO INFO - Get video information
+### ===================================
+
+### Get video info (first video)
+GET {{baseUrl}}/yt/video-info?video_url={{videoUrl}}
+
+###
+
+### Get video info (second video for testing)
+GET {{baseUrl}}/yt/video-info?video_url={{videoUrl2}}
+
+
+### ===================================
+### 2. DOWNLOAD VIDEO - Download video in specified resolution
+### ===================================
+
+### Download video in 720p (default)
+GET {{baseUrl}}/yt/download_video?video_url={{videoUrl}}&resolution={{resolution}}
+
+###
+
+### Download video in 1080p
+GET {{baseUrl}}/yt/download_video?video_url={{videoUrl}}&resolution=1080p
+
+###
+
+### Download video in 480p
+GET {{baseUrl}}/yt/download_video?video_url={{videoUrl}}&resolution=480p
+
+
+### ===================================
+### 3. HISTORY - Get all videos from history
+### ===================================
+
+### Get all videos in history (READ)
+GET {{baseUrl}}/history/videos
+
+###
+
+### Get specific video by title (READ)
+GET {{baseUrl}}/history/video/?title={{videoTitle}}
+
+
+### ===================================
+### 4. UPDATE VIDEO - Edit video title (UPDATE)
+### ===================================
+
+### Update video title
+PUT {{baseUrl}}/history/video/edit-title?title={{videoTitle}}&new_title={{newVideoTitle}}
+
+
+### ===================================
+### 5. DELETE RESOLUTION - Remove a specific resolution (PATCH)
+### ===================================
+
+### Delete specific resolution from video
+PATCH {{baseUrl}}/history/video/resolution?title={{videoTitle}}&resolution=480p
+
+
+### ===================================
+### 6. DELETE VIDEO - Remove specific video (DELETE)
+### ===================================
+
+### Delete video by ID (replace {video_id} with actual ID from history)
+DELETE {{baseUrl}}/history/video/1
+
+###
+
+### Delete video by ID - Example 2
+DELETE {{baseUrl}}/history/video/2
+
+
+### ===================================
+### 7. CLEAR HISTORY - Delete all videos and files (DELETE)
+### ===================================
+
+### Clear entire history (⚠️ Caution: This deletes all videos and files)
+DELETE {{baseUrl}}/history/clear
+
+
+### ===================================
+### 8. UPLOAD VIDEO - Get downloaded video file
+### ===================================
+
+### Upload/Get video file by title and resolution
+GET {{baseUrl}}/yt/upload/?video_title={{videoTitle}}&video_res={{resolution}}
+
+
+### ===================================
+### TESTING SCENARIOS
+### ===================================
+
+### Scenario 1: Complete workflow
+# 1. Get video info
+GET {{baseUrl}}/yt/video-info?video_url={{videoUrl}}
+
+###
+
+# 2. Download video
+GET {{baseUrl}}/yt/download_video?video_url={{videoUrl}}&resolution=720p
+
+###
+
+# 3. Check history
+GET {{baseUrl}}/history/videos
+
+###
+
+# 4. Get specific video
+GET {{baseUrl}}/history/video/?title={{videoTitle}}
+
+###
+
+### Scenario 2: Update and delete
+# 1. Update video title
+PUT {{baseUrl}}/history/video/edit-title?title={{videoTitle}}&new_title={{newVideoTitle}}
+
+###
+
+# 2. Delete a resolution
+PATCH {{baseUrl}}/history/video/resolution?title={{newVideoTitle}}&resolution=480p
+
+###
+
+# 3. Delete the video
+DELETE {{baseUrl}}/history/video/1
+
+
+### ===================================
+### ERROR HANDLING TESTS
+### ===================================
+
+### Test 1: Invalid YouTube URL
+GET {{baseUrl}}/yt/video-info?video_url=https://invalid-url.com
+
+###
+
+### Test 2: Non-existent video title
+GET {{baseUrl}}/history/video/?title=NonExistentVideo
+
+###
+
+### Test 3: Invalid resolution
+GET {{baseUrl}}/yt/download_video?video_url={{videoUrl}}&resolution=4320p
+
+###
+
+### Test 4: Delete non-existent video
+DELETE {{baseUrl}}/history/video/999
+
+
+### ===================================
+### ADDITIONAL ENDPOINTS DOCUMENTATION
+### ===================================
+
+### API Health Check (if implemented)
+# GET {{baseUrl}}/health
+
+### API Documentation (FastAPI auto-generated)
+# GET http://localhost:8001/docs
+
+### Alternative API Documentation (ReDoc)
+# GET http://localhost:8001/redoc
+
+
+### ===================================
+### NOTES
+### ===================================
+#
+# - Replace {{videoUrl}} with actual YouTube URLs
+# - Replace video IDs in DELETE requests with actual IDs from your database
+# - The {{videoTitle}} should match the exact title stored in the database
+# - Available resolutions: 2160p, 1440p, 1080p, 720p, 480p
+# - Downloaded videos are stored in the 'storage/' directory
+# - Database is SQLite located at 'backend/database/sqlite/database.db'
+#
+# CRUD Operations:
+# - CREATE: Automatically done when fetching video info (POST-like behavior via GET)
+# - READ: GET /history/videos, GET /history/video/
+# - UPDATE: PUT /history/video/edit-title, PATCH /history/video/resolution
+# - DELETE: DELETE /history/video/{id}, DELETE /history/clear
+#
