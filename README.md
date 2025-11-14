@@ -78,7 +78,7 @@ pip install -r backend/requirements.txt
 
 - **Windows**: Descargar desde [ffmpeg.org](https://ffmpeg.org/download.html)
 - **macOS**: `brew install ffmpeg`
-- **Linux**: `sudo apt-get install ffmpeg`
+- **Arch**: `sudo pacman -S ffmpeg`
 
 #### Crear carpeta de almacenamiento
 
