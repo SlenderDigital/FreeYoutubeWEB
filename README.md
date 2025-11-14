@@ -58,14 +58,14 @@ cd FreeYoutubeWEB
 
 ```bash
 # En la raíz del proyecto
-python -m venv venv
+python -m venv .venv
 
 # Activar entorno virtual
 # En Windows:
-venv\Scripts\activate
+.venv\Scripts\activate
 
 # En macOS/Linux:
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 #### Instalar dependencias
