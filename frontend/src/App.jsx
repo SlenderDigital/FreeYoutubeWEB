@@ -5,7 +5,7 @@ import SearchBar from './components/SearchBar';
 import VideoCard from './components/VideoCard';
 import History from './components/History';
 
-const API_URL = 'http://localhost:8001/api';
+const API_URL = import.meta.env.VITE_API_URL | 'http://localhost:8001/api';
 
 const sanitizeFilename = (filename) => {
   return filename.replace(/[\\/*?:"<>|]/g, '_');
