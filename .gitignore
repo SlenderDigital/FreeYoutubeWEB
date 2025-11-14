@@ -1,3 +1,2 @@
-.venv
-videos
-.vscode
+storage/*
+backend/database/sqlite/*
